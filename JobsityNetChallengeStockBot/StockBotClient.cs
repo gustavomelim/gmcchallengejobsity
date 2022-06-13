@@ -1,5 +1,6 @@
 ﻿using JobsityNetChallenge.Domain;
 using JobsityNetChallenge.Domain.Extensions;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -22,6 +23,7 @@ namespace JobsityNetChallenge.StockBot
 
         private static string STOCK_URL = "https://stooq.com/q/l/?s={0}&f=sd2t2ohlcv&h&e={1}";
         private readonly HttpClient _httpClient;
+
 
         public StockBotClient(HttpClient httpClient)
         {

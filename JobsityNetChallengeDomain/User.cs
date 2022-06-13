@@ -12,5 +12,6 @@ namespace JobsityNetChallenge.Domain
         [BsonId]
         public string Id { get; set; }
         public string Password { get; set; }
+        public string ConnectionId { get; set; }
     }
 }

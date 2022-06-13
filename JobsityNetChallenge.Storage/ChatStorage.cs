@@ -13,6 +13,7 @@ namespace JobsityNetChallenge.Storage
     {
         User FetchUser(string id);
         List<Message> LoadAllMessages();
+        List<Message> LoadLastMessages(int size);
         Message SaveMessage(Message data);
         User SaveUser(User data);
     }
@@ -35,6 +36,13 @@ namespace JobsityNetChallenge.Storage
             List<Message> storedValue = null;
             var simpleStorage = _liteDb.GetCollection<Message>(DB_TABLE_MESSAGES);
             storedValue = simpleStorage.FindAll().ToList();
+            return storedValue;
+        }
+        public List<Message> LoadLastMessages(int size)
+        {
+            List<Message> storedValue = null;
+            var simpleStorage = _liteDb.GetCollection<Message>(DB_TABLE_MESSAGES);
+            storedValue = simpleStorage.FindAll().OrderByDescending(x=>x.Id).Take(size).ToList();
             return storedValue;
         }
 

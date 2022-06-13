@@ -14,6 +14,7 @@
 		var siteRoot = '@ViewData["siteRoot"]';
 		var controllerName = '@ViewData["controllerName"]';
 		var currentPath = siteRoot + '/' + controllerName + '/';
+        var userId = '@ViewData["senderUId"]';
     </script>
 
     <!-- ================SCRIPTS=================== -->
@@ -23,29 +24,48 @@
 
     <script>
         const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/ChatMessageHub")
-        .build();
+            .withUrl("/ChatMessageHub", {
+                accessTokenFactory: () => {
+                    return userId;
+                }
+            })
+            .build();
         connection.start()
         .catch(err => alert(err.toString()));
 
         connection.on('UserConnected', (ConnectionId) => 
         { 
             let _message = " Connected " + ConnectionId;
-            let sender = $('#senderUId').text();
-            appendLine(sender, _message, true);
+            //let sender = $('#senderUId').text();
+            appendLine("server info", _message, null, true);
         });
 
         connection.on('UserDisconnected', (ConnectionId) => 
         {
             let _message = " Disconnected " + ConnectionId;
-            let sender = $('#senderUId').text();
-            appendLine(sender, _message, true);
+            //let sender = $('#senderUId').text();
+            appendLine("server info", _message, null, true);
         });
 
-        connection.on('SendMessage', (sender, message) => 
+        connection.on('SendMessage', (sender, message, date) => 
         {
-            appendLine(sender, message, false);
+            appendLine(sender, message, date, false);
         });
+
+        connection.on('SendHistory', (messages) => 
+        {
+            processHistory(messages)
+        });
+
+        function processHistory(messages) {
+            if (messages == null) 
+            {
+                return;
+            }
+            for (var i = 0; i < messages.length; i++) {
+                appendLine(messages[i].user, messages[i].messageContent, messages[i].id, false);
+            }
+        }
     </script>
 
     <style>
@@ -114,10 +134,8 @@
 <body>
 <div class="signalr-demo">
     <div id="senderUId">@ViewData["senderUId"]</div>
-    <form id="messageform">
-        <input type="text" id="messagebox" />
-        <input type="button" value="Send Message" id="btnSend" />
-    </form>
+    <input type="text" id="messagebox" />
+    <input type="button" value="Send Message" id="btnSend" />
     <hr />
     <div class="ud-body">
         <div class="msg-box">
@@ -147,10 +165,14 @@ function stockCall() {
 };
 
 
-function appendLine(uid, message, isControl) {
+function appendLine(uid, message, ticks, isControl) {
+    a = ticks;
+    var date = ticks == null ? "" : "[" + dateToString(ticksToDate(ticks)) + "] - ";
     let sender = $('#senderUId').text();
+    
     let nameElement = document.createElement('strong');
-    nameElement.innerText = `${uid}:`;
+
+    nameElement.innerText = `${date}${uid}:`;
     let msgElement = document.createElement('em');
     msgElement.innerText = ` ${message}`;
     let li = document.createElement('li');
@@ -165,6 +187,20 @@ function appendLine(uid, message, isControl) {
     li.appendChild(msgElement);
     $('#messageList').append(li);
 };
+
+function ticksToDate(ticks) {
+  return Number.isInteger(ticks) ? new Date(ticks / 1e+4 + new Date('0001-01-01T00:00:00Z').getTime()) : null;
+}
+
+function dateToString(date) {
+  var yyyy = date.getFullYear();
+  var mm = date.getMonth() < 9 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1);
+  var dd = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+  var hh = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+  var min = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+  //var ss = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+  return "".concat(mm).concat("/").concat(dd).concat("/").concat(yyyy).concat(" ").concat(hh).concat(":").concat(min);
+}
 </script>
 
 
