@@ -1,0 +1,172 @@
+﻿@using Microsoft.AspNetCore.Http
+
+<html>
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Josity DotNet Chat Challenge</title>
+
+    <script type="text/javascript">
+		var siteRoot = '@ViewData["siteRoot"]';
+		var controllerName = '@ViewData["controllerName"]';
+		var currentPath = siteRoot + '/' + controllerName + '/';
+    </script>
+
+    <!-- ================SCRIPTS=================== -->
+    <script src="@Url.Content("~/lib/jquery/dist/jquery.js")" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/ChatMessageHub")
+        .build();
+        connection.start()
+        .catch(err => alert(err.toString()));
+
+        connection.on('UserConnected', (ConnectionId) => 
+        { 
+            let _message = " Connected " + ConnectionId;
+            let sender = $('#senderUId').text();
+            appendLine(sender, _message, true);
+        });
+
+        connection.on('UserDisconnected', (ConnectionId) => 
+        {
+            let _message = " Disconnected " + ConnectionId;
+            let sender = $('#senderUId').text();
+            appendLine(sender, _message, true);
+        });
+
+        connection.on('SendMessage', (sender, message) => 
+        {
+            appendLine(sender, message, false);
+        });
+    </script>
+
+    <style>
+.ud-body {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 0;
+    right: 0;
+
+
+    margin: 9vh 10% 2vh;
+    padding: 0 10% 0;
+}
+.msg-box {
+    width: 100%;
+    height: calc(100% - 140px); 
+    margin-top: 20px;
+    border: 2px solid #191D32;
+    border-radius: .5em;
+    padding: 10px 30px;
+    font-size: 14px;
+
+    overflow: auto;
+}
+
+.msg-box ul {
+    list-style: none;
+}
+
+.msg-box .ex-msg 
+{
+    margin-bottom: 10px;
+    color: #459c1a;
+    text-align: left;
+}
+
+.msg-box .bot-msg 
+{
+    margin-bottom: 10px;
+    color: #03b1fc; 
+    text-align: left;
+}
+
+.msg-box .ctrl-msg 
+{
+    margin-bottom: 10px;
+    color: #888888; 
+    text-align: left;
+}
+
+.msg-box .in-msg 
+{
+    margin-bottom: 10px;
+    color: #DD1155; 
+    text-align: right;
+}
+
+
+
+
+
+</style>
+
+</head>
+
+<body>
+<div class="signalr-demo">
+    <div id="senderUId">@ViewData["senderUId"]</div>
+    <form id="messageform">
+        <input type="text" id="messagebox" />
+        <input type="button" value="Send Message" id="btnSend" />
+    </form>
+    <hr />
+    <div class="ud-body">
+        <div class="msg-box">
+            <ul id="messageList" style="text-align:left;"></ul>
+        </div>
+        
+    </div>
+    
+</div>
+<script>
+$(document).ready(function () 
+{
+    $("#btnSend").click(function (e) 
+    { 
+        let message = $('#messagebox').val();
+        let sender = $('#senderUId').text();
+        $('#messagebox').val(''); 
+        connection.invoke('SendMessage', sender, message);
+        e.preventDefault();
+    });
+});
+
+function stockCall() {
+    let message = "aapl.us";
+    let sender = $('#senderUId').text();
+    connection.invoke('StockCall', sender, message);
+};
+
+
+function appendLine(uid, message, isControl) {
+    let sender = $('#senderUId').text();
+    let nameElement = document.createElement('strong');
+    nameElement.innerText = `${uid}:`;
+    let msgElement = document.createElement('em');
+    msgElement.innerText = ` ${message}`;
+    let li = document.createElement('li');
+    let className = "in-msg";
+    if (isControl) {
+        className = "ctrl-msg";
+    } else {
+        className = sender == uid ? "in-msg" : "ex-msg";
+    }
+    li.className = className;
+    li.appendChild(nameElement);
+    li.appendChild(msgElement);
+    $('#messageList').append(li);
+};
+</script>
+
+
+</body>
+</html>
