@@ -158,7 +158,7 @@ function appendLine(uid, message, isControl) {
     if (isControl) {
         className = "ctrl-msg";
     } else {
-        className = sender == uid ? "in-msg" : "ex-msg";
+        className = uid == "stock bot" ? "bot-msg" : sender == uid ? "in-msg" : "ex-msg";
     }
     li.className = className;
     li.appendChild(nameElement);

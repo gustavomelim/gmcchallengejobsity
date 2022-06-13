@@ -20,11 +20,37 @@ namespace JobsityNetChallenge
 
         public async Task SendMessage(string sender, string message)
         {
-            Message storeMessage = new Message { Id = DateTime.Now.Ticks, MessageContent = message, User = sender};
-            _chatStorage.SaveMessage(storeMessage);
-            await Clients.All.SendAsync("SendMessage", sender, message);
+            if (string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+            if (message.StartsWith("/") && !message.StartsWith("/ "))
+            {
+                await ProcessCommand(sender, message);
+            } 
+            else 
+            {
+                Message storeMessage = new Message { Id = DateTime.Now.Ticks, MessageContent = message, User = sender };
+                _chatStorage.SaveMessage(storeMessage);
+                await Clients.All.SendAsync("SendMessage", sender, message);
+            }
         }
 
+        public async Task ProcessCommand(string sender, string message)
+        {
+            string responseMessage = string.Empty;
+            if (message.StartsWith("/stock="))
+            {
+                string stockCode = message.Replace("/stock=", "").ToLower();
+                var stock = await _stockBotClient.GetStockInfo(stockCode, CancellationToken.None);
+                responseMessage = stock != null ? $"{stock.Symbol} quote is ${stock.Close} per share." : "Stock not found.";
+            } 
+            else
+            {
+                responseMessage = $"Command [${message}] not recognized !";
+            }
+            await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage);
+        }
 
         public async Task StockCall(string sender, string message)
         {

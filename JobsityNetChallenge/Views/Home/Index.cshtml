@@ -1,6 +1,29 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var errMessage = TempData["errorMessage"] as string;
 }
+
+<div class="container">
+    <div class="row">
+    <div class="col-md-5 col-md-offset-4">
+        <div class="panel panel-default">
+        <div class="panel-body">
+            @if (!string.IsNullOrWhiteSpace(errMessage))
+            {
+                <div style="color:#DD1155;">@errMessage</div>
+            }
+            <form action="/auth/login" method="post" style="margin:0" autocomplete="off">
+            <div class="form-group">
+                <input type="text" name="username" id="username" placeholder="Enter Username" class="form-control" required minlength="3" maxlength="15" />
+                <input type="password" name="password" id="password" placeholder="Enter Password" class="form-control" required minlength="3" maxlength="15" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Enter Chat</button>
+            </form>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>

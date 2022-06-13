@@ -11,8 +11,10 @@ namespace JobsityNetChallenge.Storage
 {
     public interface IChatStorage
     {
+        User FetchUser(string id);
         List<Message> LoadAllMessages();
         Message SaveMessage(Message data);
+        User SaveUser(User data);
     }
 
     public class ChatStorage : IChatStorage

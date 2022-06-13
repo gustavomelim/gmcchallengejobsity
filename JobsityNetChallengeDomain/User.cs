@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,8 @@ namespace JobsityNetChallenge.Domain
 {
     public class User
     {
-        public int Id { get; set; }
-}
+        [BsonId]
+        public string Id { get; set; }
+        public string Password { get; set; }
+    }
 }

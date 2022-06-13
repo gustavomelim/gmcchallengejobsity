@@ -1,5 +1,7 @@
 ﻿using JobsityNetChallenge.Models;
 using JobsityNetChallenge.StockBot;
+using JobsityNetChallenge.Storage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,21 +13,33 @@ using System.Threading.Tasks;
 
 namespace JobsityNetChallenge.Controllers
 {
-    public class ChatController : Controller
+    public class ChatController : BaseController
     {
         private readonly ILogger<ChatController> _logger;
+        private readonly IChatStorage _chatStorage;
 
-        public ChatController(ILogger<ChatController> logger)
+        public ChatController(ILogger<ChatController> logger, IChatStorage chatStorage)
         {
             _logger = logger;
+            _chatStorage = chatStorage;
         }
 
-        public IActionResult Index(CancellationToken cancellationToken)
+        public ActionResult Index(CancellationToken cancellationToken)
         {
-            ViewData["senderUId"] = HttpContext.Session.Id;
+            var userName = TempData["senderUId"] as string;
+            if (userName == null)
+            {
+                return Redirect("/");
+            }
+
+            var currentUser = _chatStorage.FetchUser(userName);
+            if (currentUser == null)
+            {
+                return Redirect("/");
+            }
+            ViewData["senderUId"] = currentUser.Id;
             return View();
         }
-
 
     }
 }
