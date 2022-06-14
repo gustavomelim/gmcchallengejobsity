@@ -1,5 +1,6 @@
 ﻿using JobsityNetChallenge.Domain;
 using JobsityNetChallenge.Domain.Extensions;
+using JosityNetChallenge.MessageQueue;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace JobsityNetChallenge.StockBot
 {
     public interface IStockBotClient
     {
+        Task EnqueueStockInfo(string stockCode, CancellationToken cancellationToken);
         Task<StockInfo> GetStockInfo(string stockCode, CancellationToken cancellationToken);
     }
 
@@ -23,11 +25,13 @@ namespace JobsityNetChallenge.StockBot
 
         private static string STOCK_URL = "https://stooq.com/q/l/?s={0}&f=sd2t2ohlcv&h&e={1}";
         private readonly HttpClient _httpClient;
+        private readonly IMessageProducer _messageProducer;
 
 
-        public StockBotClient(HttpClient httpClient)
+        public StockBotClient(HttpClient httpClient, IMessageProducer messageProducer)
         {
             _httpClient = httpClient;
+            _messageProducer = messageProducer;
         }
 
         public async Task<StockInfo> GetStockInfo(string stockCode, CancellationToken cancellationToken)
@@ -35,6 +39,13 @@ namespace JobsityNetChallenge.StockBot
             StockInfoList remoteDate = await PoolDataFromStocksSiteAsCSV(stockCode, cancellationToken);
             StockInfo stockInfo = remoteDate?.Symbols?.FirstOrDefault(x => string.Equals(x.Symbol,stockCode, StringComparison.InvariantCultureIgnoreCase));
             return stockInfo;
+        }
+
+        public async Task EnqueueStockInfo(string stockCode, CancellationToken cancellationToken)
+        {
+            StockInfoList remoteDate = await PoolDataFromStocksSiteAsCSV(stockCode, cancellationToken);
+            StockInfo stockInfo = remoteDate?.Symbols?.FirstOrDefault(x => string.Equals(x.Symbol, stockCode, StringComparison.InvariantCultureIgnoreCase));
+            _messageProducer.SendMessage(stockInfo);
         }
 
         private async Task<StockInfoList> PoolDataFromStocksSiteAsJson(string stockCode, CancellationToken cancellationToken)

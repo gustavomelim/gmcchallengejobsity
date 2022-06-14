@@ -1,5 +1,6 @@
 ﻿using JobsityNetChallenge.StockBot;
 using JobsityNetChallenge.Storage;
+using JosityNetChallenge.MessageQueue;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,8 @@ namespace JobsityNetChallenge
             //http
             services.AddHttpClient<IStockBotClient, StockBotClient>();
             services.AddSingleton<IChatStorage, ChatStorage>();
+            services.AddSingleton<IMessageProducer, RabbitMQProducer> ();
+
         }
     }
 }

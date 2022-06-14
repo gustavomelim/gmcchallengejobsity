@@ -1,4 +1,5 @@
 using JobsityNetChallenge.MessageHub;
+using JobsityNetChallenge.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -35,9 +36,12 @@ namespace JobsityNetChallenge
                 options.Cookie.IsEssential = true;
             });
 
-                //services.AddMvc();
+            services.AddHostedService<RabbitListener>();
 
-                //services.AddControllers();
+
+            //services.AddMvc();
+
+            //services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

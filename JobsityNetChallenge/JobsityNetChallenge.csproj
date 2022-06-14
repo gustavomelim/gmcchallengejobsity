@@ -15,6 +15,7 @@
     <ProjectReference Include="..\JobsityNetChallenge.MessageHub\JobsityNetChallenge.MessageHub.csproj" />
     <ProjectReference Include="..\JobsityNetChallenge.Storage\JobsityNetChallenge.Storage.csproj" />
     <ProjectReference Include="..\JobsityNetChallengeStockBot\JobsityNetChallenge.StockBot.csproj" />
+    <ProjectReference Include="..\JosityNetChallenge.MessageQueue\JosityNetChallenge.MessageQueue.csproj" />
   </ItemGroup>
 
 </Project>
