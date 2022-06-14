@@ -1,6 +1,6 @@
 # gmcchallengejobsity
 
-### How to build and run
+## How to build and run
 
 The exercise was developes using C# with .Net 5.0 
 To build and run you must have .NET Runtime 5.0 (or greater) instaled 
@@ -14,8 +14,8 @@ And run the command
 
 By default the application run at port 5000, to access the aplication open the link http://localhost:5000 on a browser.
 
-### External dependencies
-## RabbitMQ
+## External dependencies
+### RabbitMQ
 The application contains a decoupled bot the gather stock prices per user request, so it relies on a message brokers named RabbitMQ (www.rabbitmq.com), to send messages asynchornous back to the user.
 
 The Host name ("Hostname") and the port ("Port") of RabbitMQ service must be configured at appsettings.json that is JobsityNetChallenge at directory.
@@ -30,7 +30,7 @@ The configuration keys are:
 
 For local development and tests I used a RabbitMQ docker container, install instructions can be found at https://www.rabbitmq.com/download.html
 
-## LiteDb
+### LiteDb
 The aplication also relies on a database to save message history and user information, I choose to use a local serverless NoSQL database 
 
 At the appsettings.json configuration file you must specify the database location:
@@ -41,9 +41,9 @@ The database file is locate under LiteDb directory of application JobsityNetChal
 
 So it is not recommended that you change the configuration file.
 
-### Design decisions and documentation
+## Design decisions and documentation
 
-## Registered users
+### Registered users
 To allow registered users to log in, I used the database to save and provide thos users, the password is stored hash encrypted, so confidential information is secured.
 
 The user and their password are:
@@ -57,10 +57,10 @@ http://localhost:5000/auth/Register/{user}/{password}
 
 The database access to read and write data are developed in classes under JobsityNetChallenge.Storage project
 
-## Local storage and previous messages
+### Local storage and previous messages
 The database also records every message sent using the chat, when the user logs in, the system retrieve the last 50 messages and show to the user orderer by their timestamp
 
-## Stock Bot
+### Stock Bot
 Communication with stock bot was implemented asynchronous when a user command is received a fire and forget Task is called a class (implemented at JobsityNetChallenge.StockBot package) that calls the external API to gather stocl info. So the user is informed that the stock price will be gathered in a few moments, and his connection with the server is not halted waiting for the result.
 
 This client call the external API, process the result as a CSV file, and enqueue the result using RabbitMQ service. If the stock was not found, it warns the user of this problem.
@@ -73,7 +73,7 @@ So:
 RabbitMQRabbitMQ <--Dequeue--- RabbitListener -----> chat room
 
 
-## Chat functionalities
+### Chat functionalities
 All functionalities to implement the chat are developed using SignalR library, it keeps the connection open between the browser and the server, is is also able to detect when a user is connected and disconnected.
 
 It is responsible to receive user messages and using it javascript library and post to the server, server process and sends back to the chat, using SignalR libraries also, it allows to send message to all users, or to a single user (used when a stock command is received)
@@ -81,7 +81,7 @@ It is responsible to receive user messages and using it javascript library and p
 At the server side all chat functionalities were implemented at ChatMessageHub class.
 
 
-## How user is identified
+### How user is identified
 When the user logs, it is saved on the database the current connection Id identified by the SignalR.
 
 Stock gathered also enqueue the user data that post the command, when the message is processed it has the user SignalR connection Id to send the message back to the user.
