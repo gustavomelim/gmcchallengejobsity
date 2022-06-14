@@ -40,13 +40,13 @@ namespace JobsityNetChallenge.MessageHub
 
         public async Task ProcessCommand(string userId, string message)
         {
-            string responseMessage = string.Empty;
             var user = _chatStorage.FetchUser(userId);
             if (user == null)
             {
                 return;
             }
 
+            string responseMessage;
             if (message.StartsWith("/stock="))
             {
                 string stockCode = message.Replace("/stock=", "").ToLower();

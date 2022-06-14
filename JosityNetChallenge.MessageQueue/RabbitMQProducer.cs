@@ -38,7 +38,6 @@ namespace JosityNetChallenge.MessageQueue
             };
             var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
-            //channel.QueueDeclare(QUEUE);
             channel.QueueDeclare(queue: QUEUE_NAME,
                                         durable: false,
                                         exclusive: false,
@@ -51,7 +50,6 @@ namespace JosityNetChallenge.MessageQueue
                                     basicProperties: null,
                                     body: body);
 
-            //channel.BasicPublish(exchange: "", routingKey: QUEUE, body: body);
         }
 
 
