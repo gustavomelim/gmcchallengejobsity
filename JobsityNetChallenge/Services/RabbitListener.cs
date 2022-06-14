@@ -1,4 +1,7 @@
 ﻿using JobsityNetChallenge.Domain;
+using JobsityNetChallenge.MessageHub;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -12,25 +15,35 @@ namespace JobsityNetChallenge.Services
 {
     public class RabbitListener : IHostedService
     {
+        private readonly IHubContext<ChatMessageHub> _hubContext;
 
-        private readonly IConnection connection;
-        private readonly IModel channel;
+        private readonly IConnection _connection;
+        private readonly IModel _channel;
 
-        protected string RouteKey;
-        protected string QueueName;
+        protected string QUEUE_NAME = "orders";
+        protected string ROUTE_KEY = "stockquote";
+        private static string RMQ_HOST = "localhost";
+        private static int RMQ_PORT = 5672;
 
-        public RabbitListener()
+
+        public RabbitListener(IHubContext<ChatMessageHub> hubContext, IConfiguration configuration)
         {
-            QueueName = "orders";
-            RouteKey = "stockquote";
+            _hubContext = hubContext;
+            QUEUE_NAME = configuration["RabbitMq:QueueName"];
+            ROUTE_KEY = configuration["RabbitMq:RouteKey"];
+            RMQ_HOST = configuration["RabbitMq:Hostname"];
+            RMQ_PORT = 5672;
+            _ = int.TryParse(configuration["RabbitMq:Port"], out RMQ_PORT);
+
             try
             {
                 var factory = new ConnectionFactory
                 {
-                    HostName = "localhost"
+                    HostName = RMQ_HOST,
+                    Port = RMQ_PORT,
                 };
-                connection = factory.CreateConnection();
-                channel = connection.CreateModel();
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
             }
             catch (Exception ex)
             {
@@ -49,8 +62,25 @@ namespace JobsityNetChallenge.Services
         // How to process messages
         public virtual bool Process(string message)
         {
-            StockInfo stockInfo = JsonConvert.DeserializeObject<StockInfo>(message);
-            
+            QueueStockMessage stockInfoMessage = JsonConvert.DeserializeObject<QueueStockMessage>(message);
+            if (stockInfoMessage==null)
+            {
+                return true;
+            }
+            StockInfo stock = stockInfoMessage.Stock;
+            User user = stockInfoMessage.User;
+            if (stock == null || user == null)
+            {
+                return true;
+            }
+
+            if (_hubContext.Clients.Client(user.ConnectionId) == null)
+            {
+                return true;
+            }
+
+            string responseMessage = $"{stock.Symbol} quote is ${stock.Close} per share.";
+            _hubContext.Clients.Client(user.ConnectionId).SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
             Console.WriteLine($"RabbitListener process:{message}");
             return true;
         }
@@ -58,11 +88,11 @@ namespace JobsityNetChallenge.Services
         // Registered consumer monitoring here
         public void Register()
         {
-            Console.WriteLine($"RabbitListener register,routeKey:{RouteKey}");
-            channel.ExchangeDeclare(exchange: "message", type: "topic");
-            channel.QueueDeclare(queue: QueueName, exclusive: false);
-            channel.QueueBind(queue: QueueName, exchange: "message", routingKey: RouteKey);
-            var consumer = new EventingBasicConsumer(channel);
+            Console.WriteLine($"RabbitListener register,routeKey:{ROUTE_KEY}");
+            _channel.ExchangeDeclare(exchange: "message", type: "topic");
+            _channel.QueueDeclare(queue: QUEUE_NAME, exclusive: false);
+            _channel.QueueBind(queue: QUEUE_NAME, exchange: "message", routingKey: ROUTE_KEY);
+            var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
                 var body = ea.Body.ToArray();
@@ -70,21 +100,21 @@ namespace JobsityNetChallenge.Services
                 var result = Process(message);
                 if (result)
                 {
-                    channel.BasicAck(ea.DeliveryTag, false);
+                    _channel.BasicAck(ea.DeliveryTag, false);
                 }
             };
-            channel.BasicConsume(queue: QueueName, consumer: consumer);
+            _channel.BasicConsume(queue: QUEUE_NAME, consumer: consumer);
         }
 
         public void DeRegister()
         {
-            this.connection.Close();
+            this._connection.Close();
         }
 
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.connection.Close();
+            this._connection.Close();
             return Task.CompletedTask;
         }
     }

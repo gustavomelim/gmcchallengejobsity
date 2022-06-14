@@ -28,7 +28,7 @@ namespace JobsityNetChallenge.MessageHub
             }
             if (message.StartsWith("/") && !message.StartsWith("/ "))
             {
-                await ProcessCommand(sender, message);
+                await ProcessCommand(userId, message);
             }
             else
             {
@@ -38,27 +38,27 @@ namespace JobsityNetChallenge.MessageHub
             }
         }
 
-        public async Task ProcessCommand(string sender, string message)
+        public async Task ProcessCommand(string userId, string message)
         {
             string responseMessage = string.Empty;
+            var user = _chatStorage.FetchUser(userId);
+            if (user == null)
+            {
+                return;
+            }
+
             if (message.StartsWith("/stock="))
             {
                 string stockCode = message.Replace("/stock=", "").ToLower();
-                var stock = await _stockBotClient.GetStockInfo(stockCode, CancellationToken.None);
-                responseMessage = stock != null && !string.IsNullOrEmpty(stock.Symbol)  ? $"{stock.Symbol} quote is ${stock.Close} per share." : $"Stock [{stockCode}] not found.";
+                await _stockBotClient.EnqueueStockInfo(user, stockCode, CancellationToken.None);
+                responseMessage = $"I will try to fetch [{stockCode}] data, this may take some time !";
+                //responseMessage = stock != null && !string.IsNullOrEmpty(stock.Symbol)  ? $"{stock.Symbol} quote is ${stock.Close} per share." : $"Stock [{stockCode}] not found.";
             }
             else
             {
                 responseMessage = $"Command [${message}] not recognized !";
             }
             await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
-        }
-
-        public async Task StockCall(string sender, string message)
-        {
-            var stock = await _stockBotClient.GetStockInfo("aapl.us", CancellationToken.None);
-            var stockMessage = stock != null ? $"{stock.Symbol} quote is ${stock.Close} per share." : "Stock not found.";
-            await Clients.Caller.SendAsync("SendMessage", sender, stockMessage);
         }
 
         public override async Task OnConnectedAsync()
@@ -86,14 +86,6 @@ namespace JobsityNetChallenge.MessageHub
         {
             var accessToken = Context.GetHttpContext().Request.Query["access_token"];
             return accessToken;    
-        }
-
-        private void RetrieveHeaders ()
-        {
-            var httpCtx = Context.GetHttpContext();
-            var someHeaderValue = httpCtx.Request.Headers["Foo"].ToString();
-            var allHeaders = httpCtx.Request.Headers.Values;
-
         }
     }
 }

@@ -28,7 +28,7 @@ namespace JobsityNetChallenge.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            await _stockBotClient.EnqueueStockInfo("aapl.us", cancellationToken);
+            await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
             var stock = await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
 
             StringBuilder sb = new StringBuilder();

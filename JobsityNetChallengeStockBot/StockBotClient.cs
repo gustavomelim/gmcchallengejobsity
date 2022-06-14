@@ -14,7 +14,7 @@ namespace JobsityNetChallenge.StockBot
 {
     public interface IStockBotClient
     {
-        Task EnqueueStockInfo(string stockCode, CancellationToken cancellationToken);
+        Task EnqueueStockInfo(User user, string stockCode, CancellationToken cancellationToken);
         Task<StockInfo> GetStockInfo(string stockCode, CancellationToken cancellationToken);
     }
 
@@ -41,11 +41,17 @@ namespace JobsityNetChallenge.StockBot
             return stockInfo;
         }
 
-        public async Task EnqueueStockInfo(string stockCode, CancellationToken cancellationToken)
+        public async Task EnqueueStockInfo(User user, string stockCode, CancellationToken cancellationToken)
         {
             StockInfoList remoteDate = await PoolDataFromStocksSiteAsCSV(stockCode, cancellationToken);
             StockInfo stockInfo = remoteDate?.Symbols?.FirstOrDefault(x => string.Equals(x.Symbol, stockCode, StringComparison.InvariantCultureIgnoreCase));
-            _messageProducer.SendMessage(stockInfo);
+            QueueStockMessage queueStockMessage = new QueueStockMessage()
+            {
+                Stock = stockInfo,
+                User = user,
+            };
+
+            _messageProducer.SendMessage(queueStockMessage);
         }
 
         private async Task<StockInfoList> PoolDataFromStocksSiteAsJson(string stockCode, CancellationToken cancellationToken)
