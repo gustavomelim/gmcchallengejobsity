@@ -50,13 +50,13 @@ namespace JobsityNetChallenge.MessageHub
             if (message.StartsWith("/stock="))
             {
                 string stockCode = message.Replace("/stock=", "").ToLower();
-                await _stockBotClient.EnqueueStockInfo(user, stockCode, CancellationToken.None);
+                _ = _stockBotClient.EnqueueStockInfo(user, stockCode, CancellationToken.None);
                 responseMessage = $"I will try to fetch [{stockCode}] data, this may take some time !";
                 //responseMessage = stock != null && !string.IsNullOrEmpty(stock.Symbol)  ? $"{stock.Symbol} quote is ${stock.Close} per share." : $"Stock [{stockCode}] not found.";
             }
             else
             {
-                responseMessage = $"Command [${message}] not recognized !";
+                responseMessage = $"Command [{message}] not recognized !";
             }
             await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
         }
@@ -78,7 +78,8 @@ namespace JobsityNetChallenge.MessageHub
 
         public override async Task OnDisconnectedAsync(Exception ex)
         {
-            await Clients.All.SendAsync("UserDisconnected", Context.ConnectionId);
+            string userId = RetrieveUserId();
+            await Clients.All.SendAsync("UserDisconnected", userId);
             await base.OnDisconnectedAsync(ex);
         }
 

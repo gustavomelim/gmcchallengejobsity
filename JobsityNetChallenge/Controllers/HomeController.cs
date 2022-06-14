@@ -28,20 +28,20 @@ namespace JobsityNetChallenge.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
-            var stock = await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
+            //await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
+            //var stock = await _stockBotClient.GetStockInfo("aapl.us", cancellationToken);
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(stock != null ? $"{stock.Symbol} quote is ${stock.Close} per share." : "");
-            sb.AppendLine("<br />");
-            var messages = _chatStorage.LoadAllMessages();
-            messages = messages.OrderBy(x => x.Id).ToList();
-            foreach (var item in messages.OrderBy(x => x.Id))
-            {
-                sb.AppendLine($"{item.User} - {item.MessageContent}");
-                sb.AppendLine("<br />");
-            }
-            ViewData["stockPrice"] = sb.ToString();
+            //StringBuilder sb = new StringBuilder();
+            //sb.AppendLine(stock != null ? $"{stock.Symbol} quote is ${stock.Close} per share." : "");
+            //sb.AppendLine("<br />");
+            //var messages = _chatStorage.LoadAllMessages();
+            //messages = messages.OrderBy(x => x.Id).ToList();
+            //foreach (var item in messages.OrderBy(x => x.Id))
+            //{
+            //    sb.AppendLine($"{item.User} - {item.MessageContent}");
+            //    sb.AppendLine("<br />");
+            //}
+            //ViewData["stockPrice"] = sb.ToString();
             return View();
         }
 

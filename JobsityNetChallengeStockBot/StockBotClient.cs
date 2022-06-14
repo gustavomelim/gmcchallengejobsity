@@ -50,7 +50,6 @@ namespace JobsityNetChallenge.StockBot
                 Stock = stockInfo,
                 User = user,
             };
-
             _messageProducer.SendMessage(queueStockMessage);
         }
 
@@ -78,20 +77,34 @@ namespace JobsityNetChallenge.StockBot
             StockInfoList result = new StockInfoList();
             result.Symbols = new List<StockInfo>();
             string[] lines = dataAsCSV.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            StockInfo stockInfo;
             for (int i = 1; i < lines.Length; i++)
             {
                 string[] content = lines[i].Split(",", StringSplitOptions.TrimEntries);
-                result.Symbols.Add(new StockInfo()
+                if (lines[i].Contains("N/D,N/D,N/D,N/D,N/D,N/D,N/D",StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Symbol = content[0],
-                    Date = ParseStockDate(content[1]),
-                    Time = ParseStockTime(content[2]),
-                    Open = ParseStockValue(content[3]),
-                    High = ParseStockValue(content[4]),
-                    Low = ParseStockValue(content[5]),
-                    Close = ParseStockValue(content[6]),
-                    Volume = ParseStockVolume(content[7]),
-                });
+                    stockInfo = new StockInfo()
+                    {
+                        Symbol = content[0],
+                        HasError = true,
+                    };
+                } 
+                else
+                {
+                    stockInfo = new StockInfo()
+                    {
+                        Symbol = content[0],
+                        Date = ParseStockDate(content[1]),
+                        Time = ParseStockTime(content[2]),
+                        Open = ParseStockValue(content[3]),
+                        High = ParseStockValue(content[4]),
+                        Low = ParseStockValue(content[5]),
+                        Close = ParseStockValue(content[6]),
+                        Volume = ParseStockVolume(content[7]),
+                        HasError = false,
+                    };
+                }                
+                result.Symbols.Add(stockInfo);
             }
             return result;
         }

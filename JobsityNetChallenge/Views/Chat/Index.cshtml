@@ -165,6 +165,11 @@ function stockCall() {
 };
 
 
+function scrollToBottom()
+{
+	$(".msg-box").scrollTop($(".msg-box")[0].scrollHeight);
+}
+
 function appendLine(uid, message, ticks, isControl) {
     a = ticks;
     var date = ticks == null ? "" : "[" + dateToString(ticksToDate(ticks)) + "] - ";
@@ -186,6 +191,7 @@ function appendLine(uid, message, ticks, isControl) {
     li.appendChild(nameElement);
     li.appendChild(msgElement);
     $('#messageList').append(li);
+    scrollToBottom();
 };
 
 function ticksToDate(ticks) {

@@ -69,6 +69,7 @@ namespace JobsityNetChallenge.Services
             }
             StockInfo stock = stockInfoMessage.Stock;
             User user = stockInfoMessage.User;
+            
             if (stock == null || user == null)
             {
                 return true;
@@ -78,17 +79,18 @@ namespace JobsityNetChallenge.Services
             {
                 return true;
             }
-
-            string responseMessage = $"{stock.Symbol} quote is ${stock.Close} per share.";
+            string responseMessage = $"{stock.Symbol} quote is ${stock.Open} per share.";
+            if (stock.HasError)
+            {
+                responseMessage = $"Could not find information for {stock.Symbol} quote.";
+            }
             _hubContext.Clients.Client(user.ConnectionId).SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
-            Console.WriteLine($"RabbitListener process:{message}");
             return true;
         }
 
         // Registered consumer monitoring here
         public void Register()
         {
-            Console.WriteLine($"RabbitListener register,routeKey:{ROUTE_KEY}");
             _channel.ExchangeDeclare(exchange: "message", type: "topic");
             _channel.QueueDeclare(queue: QUEUE_NAME, exclusive: false);
             _channel.QueueBind(queue: QUEUE_NAME, exchange: "message", routingKey: ROUTE_KEY);

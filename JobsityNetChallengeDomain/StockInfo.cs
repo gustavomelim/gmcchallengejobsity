@@ -35,5 +35,6 @@ namespace JobsityNetChallenge.Domain
 
         [JsonProperty("volume")]
         public long Volume { get; set; }
+        public bool HasError { get; set; } = true;
     }
 }
