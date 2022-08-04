@@ -61,7 +61,8 @@ namespace JobsityNetChallenge.MessageHub
             if (command.Equals("stock", StringComparison.InvariantCultureIgnoreCase))
             {
                 await ProcessStockCommand(user, commandValue);
-            } else if (command.Equals("zip", StringComparison.InvariantCultureIgnoreCase))
+            } 
+            else if (command.Equals("zip", StringComparison.InvariantCultureIgnoreCase))
             {
                 await ProcessZipCommand(user, commandValue);
             }
