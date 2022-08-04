@@ -23,7 +23,10 @@ namespace JobsityNetChallenge.Services
         protected string QUEUE_NAME = "orders";
         protected string ROUTE_KEY = "stockquote";
         private static string RMQ_HOST = "localhost";
+        private static string RMQ_USER = String.Empty;
+        private static string RMQ_PASSWORD = String.Empty;
         private static int RMQ_PORT = 5672;
+        private static bool MQ_ENABLED = false;
 
 
         public RabbitListener(IHubContext<ChatMessageHub> hubContext, IConfiguration configuration)
@@ -33,27 +36,40 @@ namespace JobsityNetChallenge.Services
             ROUTE_KEY = configuration["RabbitMq:RouteKey"];
             RMQ_HOST = configuration["RabbitMq:Hostname"];
             RMQ_PORT = 5672;
+            RMQ_USER = configuration["RabbitMq:User"];
+            RMQ_PASSWORD = configuration["RabbitMq:Password"];
             _ = int.TryParse(configuration["RabbitMq:Port"], out RMQ_PORT);
+            _ = bool.TryParse(configuration["MessageQueueEnabled"], out MQ_ENABLED);
 
-            try
+            if (MQ_ENABLED)
             {
-                var factory = new ConnectionFactory
+                try
                 {
-                    HostName = RMQ_HOST,
-                    Port = RMQ_PORT,
-                };
-                _connection = factory.CreateConnection();
-                _channel = _connection.CreateModel();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"RabbitListener init error,ex:{ex.Message}");
+                    var factory = new ConnectionFactory
+                    {
+                        //HostName = RMQ_HOST,
+                        Port = RMQ_PORT,
+                        UserName = RMQ_USER,
+                        Password = RMQ_PASSWORD,
+                        Uri = new Uri(RMQ_HOST)
+                    };
+
+                    _connection = factory.CreateConnection();
+                    _channel = _connection.CreateModel();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"RabbitListener init error,ex:{ex.Message}");
+                }
             }
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Register();
+            if (MQ_ENABLED)
+            {
+                Register();
+            }            
             return Task.CompletedTask;
         }
 
@@ -67,10 +83,10 @@ namespace JobsityNetChallenge.Services
             {
                 return true;
             }
-            StockInfo stock = stockInfoMessage.Stock;
+            string responseMessage = stockInfoMessage.Message;
             User user = stockInfoMessage.User;
             
-            if (stock == null || user == null)
+            if (string.IsNullOrEmpty(responseMessage) || user == null)
             {
                 return true;
             }
@@ -78,11 +94,6 @@ namespace JobsityNetChallenge.Services
             if (_hubContext.Clients.Client(user.ConnectionId) == null)
             {
                 return true;
-            }
-            string responseMessage = $"{stock.Symbol} quote is ${stock.Open} per share.";
-            if (stock.HasError)
-            {
-                responseMessage = $"Could not find information for {stock.Symbol} quote.";
             }
             _hubContext.Clients.Client(user.ConnectionId).SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
             return true;

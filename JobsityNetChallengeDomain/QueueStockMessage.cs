@@ -8,7 +8,7 @@ namespace JobsityNetChallenge.Domain
 {
     public class QueueStockMessage
     {
-        public StockInfo Stock { get; set; }
+        public string Message { get; set; }
         public User User { get; set; }
     }
 }

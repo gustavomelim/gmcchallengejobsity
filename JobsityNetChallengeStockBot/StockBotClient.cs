@@ -1,10 +1,14 @@
-﻿using JobsityNetChallenge.Domain;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using JobsityNetChallenge.Domain;
 using JobsityNetChallenge.Domain.Extensions;
 using JosityNetChallenge.MessageQueue;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -15,52 +19,57 @@ namespace JobsityNetChallenge.StockBot
     public interface IStockBotClient
     {
         Task EnqueueStockInfo(User user, string stockCode, CancellationToken cancellationToken);
-        Task<StockInfo> GetStockInfo(string stockCode, CancellationToken cancellationToken);
+        Task<string> GetStockInfo(string stockCode, CancellationToken cancellationToken);
     }
 
     public class StockBotClient : IStockBotClient
     {
-        private static CultureInfo GLOBAL_CULTURE = CultureInfo.InvariantCulture;
-        private static DateTimeStyles GLOBAL_DATE_STYLE = DateTimeStyles.None;
-
         private static string STOCK_URL = "https://stooq.com/q/l/?s={0}&f=sd2t2ohlcv&h&e={1}";
         private readonly HttpClient _httpClient;
         private readonly IMessageProducer _messageProducer;
 
 
-        public StockBotClient(HttpClient httpClient, IMessageProducer messageProducer)
+        public StockBotClient(IConfiguration configuration, HttpClient httpClient, IMessageProducer messageProducer)
         {
             _httpClient = httpClient;
             _messageProducer = messageProducer;
+            STOCK_URL = configuration["StockBot:ExternalServiceAPI"];
         }
 
-        public async Task<StockInfo> GetStockInfo(string stockCode, CancellationToken cancellationToken)
+        public async Task<string> GetStockInfo(string stockCode, CancellationToken cancellationToken)
         {
             StockInfoList remoteDate = await PoolDataFromStocksSiteAsCSV(stockCode, cancellationToken);
             StockInfo stockInfo = remoteDate?.Symbols?.FirstOrDefault(x => string.Equals(x.Symbol,stockCode, StringComparison.InvariantCultureIgnoreCase));
-            return stockInfo;
+            string message = ParseMessageResult(stockCode, stockInfo);
+            return message;
         }
 
         public async Task EnqueueStockInfo(User user, string stockCode, CancellationToken cancellationToken)
         {
             StockInfoList remoteDate = await PoolDataFromStocksSiteAsCSV(stockCode, cancellationToken);
             StockInfo stockInfo = remoteDate?.Symbols?.FirstOrDefault(x => string.Equals(x.Symbol, stockCode, StringComparison.InvariantCultureIgnoreCase));
+            string message = ParseMessageResult(stockCode, stockInfo);
             QueueStockMessage queueStockMessage = new QueueStockMessage()
             {
-                Stock = stockInfo,
+                Message = message,
                 User = user,
             };
             _messageProducer.SendMessage(queueStockMessage);
         }
 
-        private async Task<StockInfoList> PoolDataFromStocksSiteAsJson(string stockCode, CancellationToken cancellationToken)
+        private string ParseMessageResult(string stockSymbol, StockInfo stock)
         {
-            string url = string.Format(STOCK_URL, stockCode, "json");
-            StockInfoList result;
+            string message;
 
-            var response = await _httpClient.GetAsync(url, cancellationToken);
-            result = await response.ToResultAsync<StockInfoList>(cancellationToken);
-            return result;
+            if (stock != null && !stock.HasError && stock.Symbol.Equals(stockSymbol,StringComparison.InvariantCultureIgnoreCase))
+            {
+                message = $"{stock.Symbol} quote is ${stock.Open} per share.";
+            }
+            else
+            {
+                message = $"Could not find information for {stockSymbol} quote.";
+            }
+            return message;
         }
 
         private async Task<StockInfoList> PoolDataFromStocksSiteAsCSV(string stockCode, CancellationToken cancellationToken)
@@ -68,7 +77,32 @@ namespace JobsityNetChallenge.StockBot
             string url = string.Format(STOCK_URL, stockCode, "csv");
             var response = await _httpClient.GetAsync(url, cancellationToken);
             string responseContent = await response.ToResultAsStringAsync(cancellationToken);
-            StockInfoList result = ParseStockCSVInfo(responseContent);
+            StockInfoList result = ParseStockCSVInfoUsingLibrary(responseContent);
+            return result;
+        }
+
+        private StockInfoList ParseStockCSVInfoUsingLibrary(string dataAsCSV)
+        {
+            StockInfoList result = new StockInfoList();
+            result.Symbols = new List<StockInfo>();
+
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+            };
+            using (var reader = new StringReader(dataAsCSV))
+            using (var csv = new CsvReader(reader, config))
+            {
+                try
+                {
+                    csv.Context.RegisterClassMap<StockInfoWithConverter>();
+                    var records = csv.GetRecords<StockInfo>().ToList();
+                    result.Symbols.AddRange(records);
+                } catch (Exception)
+                {
+
+                }
+            }
             return result;
         }
 
@@ -86,7 +120,6 @@ namespace JobsityNetChallenge.StockBot
                     stockInfo = new StockInfo()
                     {
                         Symbol = content[0],
-                        HasError = true,
                     };
                 } 
                 else
@@ -94,14 +127,13 @@ namespace JobsityNetChallenge.StockBot
                     stockInfo = new StockInfo()
                     {
                         Symbol = content[0],
-                        Date = ParseStockDate(content[1]),
-                        Time = ParseStockTime(content[2]),
-                        Open = ParseStockValue(content[3]),
-                        High = ParseStockValue(content[4]),
-                        Low = ParseStockValue(content[5]),
-                        Close = ParseStockValue(content[6]),
-                        Volume = ParseStockVolume(content[7]),
-                        HasError = false,
+                        Date = ManualCSVValidator.ParseStockDate(content[1]),
+                        Time = ManualCSVValidator.ParseStockTime(content[2]),
+                        Open = ManualCSVValidator.ParseStockValue(content[3]),
+                        High = ManualCSVValidator.ParseStockValue(content[4]),
+                        Low = ManualCSVValidator.ParseStockValue(content[5]),
+                        Close = ManualCSVValidator.ParseStockValue(content[6]),
+                        Volume = ManualCSVValidator.ParseStockVolume(content[7]),
                     };
                 }                
                 result.Symbols.Add(stockInfo);
@@ -109,44 +141,5 @@ namespace JobsityNetChallenge.StockBot
             return result;
         }
 
-        private static DateTime ParseStockDate(string data)
-        {
-            DateTime result;
-            if (DateTime.TryParseExact(data, "yyyy-MM-dd", GLOBAL_CULTURE, GLOBAL_DATE_STYLE, out result))
-            {
-                return result;
-            }
-            return DateTime.MinValue;
-        }
-
-        private static DateTime ParseStockTime(string data)
-        {
-            DateTime result;
-            if (DateTime.TryParseExact(data, "HH:mm:ss", GLOBAL_CULTURE, GLOBAL_DATE_STYLE, out result))
-            {
-                return result;
-            }
-            return DateTime.MinValue;
-        }
-
-        private static decimal ParseStockValue(string data)
-        {
-            decimal result = -1;
-            if (!string.IsNullOrWhiteSpace(data))
-            {
-                decimal.TryParse(data, NumberStyles.Float, GLOBAL_CULTURE, out result);
-            }
-            return result;
-        }
-
-        private static long ParseStockVolume(string data)
-        {
-            int result = -1;
-            if (!string.IsNullOrWhiteSpace(data))
-            {
-                int.TryParse(data, NumberStyles.Float, GLOBAL_CULTURE, out result);
-            }
-            return result;
-        }
     }
 }
