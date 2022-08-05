@@ -55,12 +55,12 @@ namespace JobsityNetChallenge.CommandBots
         public async Task EnqueueStockInfo(User user, string stockCode, CancellationToken cancellationToken)
         {
             string message = await GetStockInfo(stockCode, cancellationToken);
-            QueueStockMessage queueStockMessage = new QueueStockMessage()
+            QueueMessage queueMessage = new QueueMessage()
             {
                 Message = message,
                 User = user,
             };
-            _messageProducer.SendMessage(queueStockMessage);
+            _messageProducer.SendMessage(queueMessage);
         }
 
         private string ParseMessageResult(string stockSymbol, StockInfo stock)

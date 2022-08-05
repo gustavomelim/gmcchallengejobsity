@@ -78,7 +78,7 @@ namespace JobsityNetChallenge.Services
         // How to process messages
         public virtual bool Process(string message)
         {
-            QueueStockMessage stockInfoMessage = JsonConvert.DeserializeObject<QueueStockMessage>(message);
+            QueueMessage stockInfoMessage = JsonConvert.DeserializeObject<QueueMessage>(message);
             if (stockInfoMessage==null)
             {
                 return true;

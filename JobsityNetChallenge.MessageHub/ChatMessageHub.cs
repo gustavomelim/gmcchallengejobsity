@@ -16,21 +16,24 @@ namespace JobsityNetChallenge.MessageHub
     {
         private readonly IStockBotClient _stockBotClient;
         private readonly IZipBotClient _zipBotClient;
+        private readonly IPokemonBotClient _pkmBotClient;
         private readonly IChatStorage _chatStorage;
         private readonly bool _MqEnabled = false;
         private readonly string commandParner = @"^/(.*)=(.*)";
         private readonly Regex _commandRegularExpression;
         private readonly Dictionary<string, IBotClient> _botCommands = new Dictionary<string, IBotClient>();
 
-        public ChatMessageHub(IStockBotClient stockBotClient, IZipBotClient zipBotClient, IChatStorage chatStorage, IConfiguration configuration)
+        public ChatMessageHub(IStockBotClient stockBotClient, IZipBotClient zipBotClient, IPokemonBotClient pkmBotClient, IChatStorage chatStorage, IConfiguration configuration)
         {
             _stockBotClient = stockBotClient;
             _zipBotClient = zipBotClient;
+            _pkmBotClient = pkmBotClient;
             _chatStorage = chatStorage;
             _commandRegularExpression = new Regex(commandParner);
             _ = bool.TryParse(configuration["MessageQueueEnabled"], out _MqEnabled);
             _botCommands.Add("stock", _stockBotClient);
             _botCommands.Add("zip", _zipBotClient);
+            _botCommands.Add("pkm", _pkmBotClient);
         }
 
         public async Task SendMessage(string sender, string message)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JobsityNetChallenge.Domain
 {
-    public class QueueStockMessage
+    public class QueueMessage
     {
         public string Message { get; set; }
         public User User { get; set; }

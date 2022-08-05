@@ -57,12 +57,12 @@ namespace JobsityNetChallenge.CommandBots
         public async Task EnqueueZipInfo(User user, string zipCode, CancellationToken cancellationToken)
         {
             var message = await GetZipInfo(zipCode, cancellationToken);
-            QueueStockMessage queueStockMessage = new QueueStockMessage()
+            QueueMessage queueMessage = new QueueMessage()
             {
                 Message = message,
                 User = user,
             };
-            _messageProducer.SendMessage(queueStockMessage);
+            _messageProducer.SendMessage(queueMessage);
         }
 
         private string ParseMessageResult(string zipCode, ZipInfo remoteData)

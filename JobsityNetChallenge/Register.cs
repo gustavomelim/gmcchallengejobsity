@@ -20,6 +20,7 @@ namespace JobsityNetChallenge
             //http
             services.AddHttpClient<IStockBotClient, StockBotClient>();
             services.AddHttpClient<IZipBotClient, ZipBotClient>();
+            services.AddHttpClient<IPokemonBotClient, PokemonBotClient>();
             services.AddSingleton<IChatStorage, ChatStorage>();
             services.AddSingleton<IMessageProducer, RabbitMQProducer>();
         }
