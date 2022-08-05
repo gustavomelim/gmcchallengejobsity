@@ -2,9 +2,9 @@
 
 ## How to build and run
 
-The exercise was developes using C# with .Net 5.0 
-To build and run you must have .NET Runtime 5.0 (or greater) instaled 
-(https://dotnet.microsoft.com/en-us/download/dotnet/5.0)
+The exercise was developes using C# with .Net 6.0 
+To build and run you must have .NET Runtime 6.0 (or greater) instaled 
+(https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 After unzip the file sent, switch to the project directory 
 JobsityNetChallenge, which contains the file 
 JobsityNetChallenge.csproj
@@ -18,17 +18,17 @@ By default the application run at port 5000, to access the aplication open the l
 ### RabbitMQ
 The application contains a decoupled bot the gather stock prices per user request, so it relies on a message brokers named RabbitMQ (www.rabbitmq.com), to send messages asynchornous back to the user.
 
-The Host name ("Hostname") and the port ("Port") of RabbitMQ service must be configured at appsettings.json that is JobsityNetChallenge at directory.
+The Host name ("Hostname"), port ("Port"), username ("User") and password ("Password") of RabbitMQ service must be configured at appsettings.json that is JobsityNetChallenge at directory.
 
 The configuration keys are:
 "RabbitMq": {
 	"QueueName": "orders", //It is recommend that you do not change
 	"RouteKey": "stockquote", //It is recommend that you do not change
-	"Hostname": "localhost", //change to your rabbitmq service hostname or ip
+	"Hostname": "amqps://XXXXX", //change to your rabbitmq service hostname or ip
 	"Port": 5672 //change to your rabbitmq service port
+	"User": "XXXXX", //change to your rabbitmq service username
+	"Password": "XXXXX" //change to your rabbitmq service password
 }
-
-For local development and tests I used a RabbitMQ docker container, install instructions can be found at https://www.rabbitmq.com/download.html
 
 ### LiteDb
 The aplication also relies on a database to save message history and user information, I choose to use a local serverless NoSQL database 
