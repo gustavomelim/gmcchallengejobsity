@@ -88,4 +88,4 @@ When the user logs, it is saved on the database the current connection Id identi
 
 Stock gathered also enqueue the user data that post the command, when the message is processed it has the user SignalR connection Id to send the message back to the user.
 
-No Session data was used, so multiple tabs can be open using the same browser, simulation one user at each of those tabs.
+Session was used to store current logged user, enabling reload of the chat web page, so multiple tabs can not be open using the same browser, to simulate more than one user at the same computer another browser or a anonymous tab must be used.
