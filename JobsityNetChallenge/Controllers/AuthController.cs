@@ -42,6 +42,8 @@ namespace JobsityNetChallenge.Controllers
                 return Redirect("/");
             }
             TempData["senderUId"] = user.Id;
+            HttpContext.Session.SetString("senderUId", user.Id);
+
             return Redirect("/chat");
         }
 

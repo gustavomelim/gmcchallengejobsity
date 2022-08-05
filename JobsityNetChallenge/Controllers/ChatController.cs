@@ -1,4 +1,5 @@
 ﻿using JobsityNetChallenge.Storage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading;
@@ -21,8 +22,15 @@ namespace JobsityNetChallenge.Controllers
             var userName = TempData["senderUId"] as string;
             if (userName == null)
             {
+                userName = HttpContext.Session.GetString("senderUId");
+                TempData["senderUId"] = userName;
+            }
+
+            if (userName == null)
+            {
                 return Redirect("/");
             }
+
 
             var currentUser = _chatStorage.FetchUser(userName);
             if (currentUser == null)
