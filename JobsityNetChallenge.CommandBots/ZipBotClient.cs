@@ -8,12 +8,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JobsityNetChallenge.ZipBot
+namespace JobsityNetChallenge.CommandBots
 {
-    public interface IZipBotClient
+    public interface IZipBotClient : IBotClient
     {
-        Task EnqueueZipInfo(User user, string stockCode, CancellationToken cancellationToken);
-        Task<string> GetZipInfo(string stockCode, CancellationToken cancellationToken);
+
     }
 
 
@@ -23,13 +22,29 @@ namespace JobsityNetChallenge.ZipBot
         private static string API_URL = "https://api.zippopotam.us/us/{0}";
         private readonly HttpClient _httpClient;
         private readonly IMessageProducer _messageProducer;
+        private readonly bool _MqEnabled = false;
 
 
         public ZipBotClient(IConfiguration configuration, HttpClient httpClient, IMessageProducer messageProducer)
         {
             _httpClient = httpClient;
             _messageProducer = messageProducer;
+            _ = bool.TryParse(configuration["MessageQueueEnabled"], out _MqEnabled);
             API_URL = configuration["ZipBot:ExternalServiceAPI"];
+        }
+
+        public async Task<string> ProcessCommand(User user, string code)
+        {
+            string responseMessage = $"I will try to fetch [{code}] data, this may take some time !";
+            if (_MqEnabled)
+            {
+                _ = EnqueueZipInfo(user, code, CancellationToken.None);
+            }
+            else
+            {
+                responseMessage = await GetZipInfo(code, CancellationToken.None);
+            }
+            return responseMessage;
         }
 
         public async Task<string> GetZipInfo(string zipCode, CancellationToken cancellationToken)
@@ -41,10 +56,10 @@ namespace JobsityNetChallenge.ZipBot
 
         public async Task EnqueueZipInfo(User user, string zipCode, CancellationToken cancellationToken)
         {
-            ZipInfo remoteData = await PoolDataFromSiteAsJson(zipCode, cancellationToken);
+            var message = await GetZipInfo(zipCode, cancellationToken);
             QueueStockMessage queueStockMessage = new QueueStockMessage()
             {
-                Message = ParseMessageResult(zipCode, remoteData),
+                Message = message,
                 User = user,
             };
             _messageProducer.SendMessage(queueStockMessage);
@@ -55,7 +70,7 @@ namespace JobsityNetChallenge.ZipBot
             string message;
             if (remoteData != null && remoteData.Places != null && remoteData.Places.Any())
             {
-                message = $"Zip code {remoteData.PostCode} is related to {remoteData.Places.FirstOrDefault()?.PlaceName}@{remoteData.Places.FirstOrDefault()?.State}";
+                message = $"Zip code {remoteData.PostCode} is located at {remoteData.Places.FirstOrDefault()?.PlaceName} - {remoteData.Places.FirstOrDefault()?.State}";
             }
             else
             {
@@ -68,7 +83,15 @@ namespace JobsityNetChallenge.ZipBot
         {
             string url = string.Format(API_URL, zipCode);
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            ZipInfo result = await response.ToResultAsync<ZipInfo>(cancellationToken);
+            ZipInfo result = null;
+            try
+            {
+                result = await response.ToResultAsync<ZipInfo>(cancellationToken);
+            } 
+            catch
+            {
+
+            }            
             return result;
         }
     }

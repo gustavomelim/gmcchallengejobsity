@@ -1,15 +1,7 @@
-﻿using JobsityNetChallenge.Models;
-using JobsityNetChallenge.StockBot;
-using JobsityNetChallenge.Storage;
-using Microsoft.AspNetCore.Http;
+﻿using JobsityNetChallenge.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace JobsityNetChallenge.Controllers
 {

@@ -23,6 +23,9 @@
 
 
     <script>
+        var queue = [];
+        var currentElement = 0;
+        var MAX_MESSAGES_TO_DISPLAY = 50;
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/ChatMessageHub", {
                 accessTokenFactory: () => {
@@ -176,23 +179,31 @@ function appendLine(uid, message, ticks, isControl) {
     a = ticks;
     var date = ticks == null ? "" : "[" + dateToString(ticksToDate(ticks)) + "] - ";
     let sender = $('#senderUId').text();
-    
     let nameElement = document.createElement('strong');
-
     nameElement.innerText = `${date}${uid}:`;
     let msgElement = document.createElement('em');
     msgElement.innerText = ` ${message}`;
     let li = document.createElement('li');
+    li.id = "messageNumber" + currentElement++;
+    queue.push(li.id);
     let className = "in-msg";
-    if (isControl) {
+
+    if (isControl) 
+    {
         className = "ctrl-msg";
-    } else {
+    } 
+    else {
         className = uid == "stock bot" ? "bot-msg" : sender == uid ? "in-msg" : "ex-msg";
     }
     li.className = className;
     li.appendChild(nameElement);
     li.appendChild(msgElement);
     $('#messageList').append(li);
+    if (queue.length > MAX_MESSAGES_TO_DISPLAY) {
+        var removeId = queue.shift();
+        $("#" + removeId).remove();
+    }
+
     scrollToBottom();
 };
 

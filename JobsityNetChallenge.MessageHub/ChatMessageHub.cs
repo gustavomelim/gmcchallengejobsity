@@ -1,10 +1,10 @@
-﻿using JobsityNetChallenge.Domain;
-using JobsityNetChallenge.StockBot;
+﻿using JobsityNetChallenge.CommandBots;
+using JobsityNetChallenge.Domain;
 using JobsityNetChallenge.Storage;
-using JobsityNetChallenge.ZipBot;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -20,6 +20,7 @@ namespace JobsityNetChallenge.MessageHub
         private readonly bool _MqEnabled = false;
         private readonly string commandParner = @"^/(.*)=(.*)";
         private readonly Regex _commandRegularExpression;
+        private readonly Dictionary<string, IBotClient> _botCommands = new Dictionary<string, IBotClient>();
 
         public ChatMessageHub(IStockBotClient stockBotClient, IZipBotClient zipBotClient, IChatStorage chatStorage, IConfiguration configuration)
         {
@@ -28,6 +29,8 @@ namespace JobsityNetChallenge.MessageHub
             _chatStorage = chatStorage;
             _commandRegularExpression = new Regex(commandParner);
             _ = bool.TryParse(configuration["MessageQueueEnabled"], out _MqEnabled);
+            _botCommands.Add("stock", _stockBotClient);
+            _botCommands.Add("zip", _zipBotClient);
         }
 
         public async Task SendMessage(string sender, string message)
@@ -58,49 +61,14 @@ namespace JobsityNetChallenge.MessageHub
                 return;
             }
 
-            if (command.Equals("stock", StringComparison.InvariantCultureIgnoreCase))
+            string responseMessage = $"Command [{command}] not recognized !";
+            var commandImplKey = _botCommands.Keys.FirstOrDefault(x => x.Equals(command, StringComparison.InvariantCultureIgnoreCase));
+            if (commandImplKey != null)
             {
-                await ProcessStockCommand(user, commandValue);
-            } 
-            else if (command.Equals("zip", StringComparison.InvariantCultureIgnoreCase))
-            {
-                await ProcessZipCommand(user, commandValue);
-            }
-            else
-            {
-                string responseMessage = $"Command [{command}] not recognized !";
-                await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
-            }
-        }
-
-        public async Task ProcessStockCommand(User user, string stockCode)
-        {
-            string responseMessage = $"I will try to fetch [{stockCode}] data, this may take some time !";
-            if (_MqEnabled)
-            {
-                _ = _stockBotClient.EnqueueStockInfo(user, stockCode, CancellationToken.None);
-            }
-            else
-            {
-                responseMessage = await _stockBotClient.GetStockInfo(stockCode, CancellationToken.None);
+                responseMessage = await _botCommands[commandImplKey].ProcessCommand(user, commandValue);
             }
             await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
         }
-
-        public async Task ProcessZipCommand(User user, string zipCode)
-        {
-            string responseMessage = $"I will try to fetch [{zipCode}] data, this may take some time !";
-            if (_MqEnabled)
-            {
-                _ = _zipBotClient.EnqueueZipInfo(user, zipCode, CancellationToken.None);
-            }
-            else
-            {
-                responseMessage = await _zipBotClient.GetZipInfo(zipCode, CancellationToken.None);
-            }
-            await Clients.Caller.SendAsync("SendMessage", "stock bot", responseMessage, DateTime.Now.Ticks);
-        }
-
 
         public override async Task OnConnectedAsync()
         {
@@ -112,7 +80,7 @@ namespace JobsityNetChallenge.MessageHub
                 _chatStorage.SaveUser(user);
             }
             await Clients.All.SendAsync("UserConnected", userId);
-            var messages = _chatStorage.LoadLastMessages(50).OrderBy(x=>x.Id);
+            var messages = _chatStorage.LoadLastMessages(50).OrderBy(x => x.Id);
             await Clients.Caller.SendAsync("SendHistory", messages);
             await base.OnConnectedAsync();
         }
@@ -127,7 +95,7 @@ namespace JobsityNetChallenge.MessageHub
         private string RetrieveUserId()
         {
             var accessToken = Context.GetHttpContext().Request.Query["access_token"];
-            return accessToken;    
+            return accessToken;
         }
     }
 }

@@ -5,8 +5,6 @@ VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobsityNetChallenge", "JobsityNetChallenge\JobsityNetChallenge.csproj", "{3BE737E0-8C88-48B8-900F-81B52228D7E6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobsityNetChallenge.StockBot", "JobsityNetChallengeStockBot\JobsityNetChallenge.StockBot.csproj", "{63BABFD5-01C9-4A48-8E34-9FB22CAF8B02}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobsityNetChallenge.Domain", "JobsityNetChallengeDomain\JobsityNetChallenge.Domain.csproj", "{734528D4-D777-4CB6-9215-3700B641401F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobsityNetChallenge.Storage", "JobsityNetChallenge.Storage\JobsityNetChallenge.Storage.csproj", "{DF4828DD-7AF3-4A47-84C2-9591BAFEE981}"
@@ -15,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JosityNetChallenge.MessageQ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobsityNetChallenge.MessageHub", "JobsityNetChallenge.MessageHub\JobsityNetChallenge.MessageHub.csproj", "{AD1F81DC-EEDB-4081-B894-4B9237A99993}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobsityNetChallenge.ZipBot", "JobsityNetChallenge.ZipBot\JobsityNetChallenge.ZipBot.csproj", "{04321D9B-68D9-48DC-A004-AC86F6C36AC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobsityNetChallenge.CommandBots", "JobsityNetChallenge.CommandBots\JobsityNetChallenge.CommandBots.csproj", "{F052F433-04B2-4575-87ED-A47F949FBEE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +25,6 @@ Global
 		{3BE737E0-8C88-48B8-900F-81B52228D7E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BE737E0-8C88-48B8-900F-81B52228D7E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BE737E0-8C88-48B8-900F-81B52228D7E6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{63BABFD5-01C9-4A48-8E34-9FB22CAF8B02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{63BABFD5-01C9-4A48-8E34-9FB22CAF8B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{63BABFD5-01C9-4A48-8E34-9FB22CAF8B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{63BABFD5-01C9-4A48-8E34-9FB22CAF8B02}.Release|Any CPU.Build.0 = Release|Any CPU
 		{734528D4-D777-4CB6-9215-3700B641401F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{734528D4-D777-4CB6-9215-3700B641401F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{734528D4-D777-4CB6-9215-3700B641401F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -47,10 +41,10 @@ Global
 		{AD1F81DC-EEDB-4081-B894-4B9237A99993}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD1F81DC-EEDB-4081-B894-4B9237A99993}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD1F81DC-EEDB-4081-B894-4B9237A99993}.Release|Any CPU.Build.0 = Release|Any CPU
-		{04321D9B-68D9-48DC-A004-AC86F6C36AC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{04321D9B-68D9-48DC-A004-AC86F6C36AC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{04321D9B-68D9-48DC-A004-AC86F6C36AC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{04321D9B-68D9-48DC-A004-AC86F6C36AC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F052F433-04B2-4575-87ED-A47F949FBEE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F052F433-04B2-4575-87ED-A47F949FBEE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F052F433-04B2-4575-87ED-A47F949FBEE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F052F433-04B2-4575-87ED-A47F949FBEE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

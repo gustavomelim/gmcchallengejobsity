@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JobsityNetChallenge.StockBot
+namespace JobsityNetChallenge.Domain.Utils
 {
     public static class ManualCSVValidator
     {
