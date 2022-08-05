@@ -21,6 +21,7 @@ The application contains a decoupled bot the gather stock prices per user reques
 The Host name ("Hostname"), port ("Port"), username ("User") and password ("Password") of RabbitMQ service must be configured at appsettings.json that is JobsityNetChallenge at directory.
 
 The configuration keys are:
+```
 "RabbitMq": {
 	"QueueName": "orders", //It is recommend that you do not change
 	"RouteKey": "stockquote", //It is recommend that you do not change
@@ -29,6 +30,7 @@ The configuration keys are:
 	"User": "XXXXX", //change to your rabbitmq service username
 	"Password": "XXXXX" //change to your rabbitmq service password
 }
+```
 
 ### LiteDb
 The aplication also relies on a database to save message history and user information, I choose to use a local serverless NoSQL database 
